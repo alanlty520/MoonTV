@@ -76,6 +76,38 @@
     "ikun": {
       "api": "https://ikunzyapi.com/api.php/provide/vod",
       "name": "iKun资源"
+    },
+    "mtzy": {
+      "api": "https://caiji.maotaizy.cc/api.php/provide/vod",
+      "name": "茅台资源"
+    },
+    "kbzy": {
+      "api": "https://gayapi.com/api.php/provide/vod",
+      "name": "快播资源"
+	},
+    "ytzu": {
+      "api": "https://apiyutu.com/api.php/provide/vod",
+      "name": "玉兔资源"
+	  },
+    "fhzu": {
+      "api": "http://fhapi9.com/api.php/provide/vod",
+      "name": "番号资源"
+	  },
+    "nxxzu": {
+      "api": "https://Naixxzy.com/api.php/provide/vod",
+      "name": "奶香香资源"
+	  },
+    "hhzu": {
+      "api": "https://hhzyapi.com/api.php/provide/vod",
+      "name": "豪华资源"
+	  },
+    "askzu": {
+      "api": "https://aosikazy.com/api.php/provide/vod",
+      "name": "奥斯卡资源"
+	  },
+    "tpzu": {
+      "api": "https://taopianapi.com/cjapi/mc/vod/json.html",
+      "name": "淘片资源"
     }
   }
 }
