@@ -1,10 +1,11 @@
-# MoonTV
+# 孤狼影视
 
 <div align="center">
   <img src="public/logo.png" alt="LibreTV Logo" width="120">
 </div>
 
-> 🎬 **MoonTV** 是一个开箱即用的、跨平台的影视聚合播放器。它基于 **Next.js 14** + **Tailwind&nbsp;CSS** + **TypeScript** 构建，支持多资源搜索、在线播放、收藏同步、播放记录、本地/云端存储，让你可以随时随地畅享海量免费影视内容。
+> 🎬 **孤狼影视是MoonTV的分支** 本人只是多添加了一些资源站，和替换了图片LOGO，MoonTV是一个开箱即用的、跨平台的影视聚合播放器。它基于 **Next.js 14** + **Tailwind&nbsp;CSS** + **TypeScript** 构建，支持多资源搜索、在线播放、收藏同步、播放记录、本地/云端存储，让你可以随时随地畅享海量免费影视内容。
+> 原始项目点这里：https://github.com/senshinya/MoonTV
 
 <div align="center">
 
