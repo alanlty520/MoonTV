@@ -167,11 +167,11 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
   ];
 
   const { siteName } = useSite();
-  if (siteName !== 'MoonTV') {
+  if (siteName !== '孤狼影视') {
     menuItems.push({
       icon: Github,
-      label: 'MoonTV',
-      href: 'https://github.com/senshinya/MoonTV',
+      label: '孤狼影视',
+      href: 'https://github.com/alanlty520/MoonTV',
     });
   }
 
