@@ -121,8 +121,7 @@
       "api": "https://api.yparse.com/api/json",
       "name": "云解析资源",
       "detail": "https://www.yparse.com"
-       // ...更多站点
-       },
+      },
     "fhzy": {
       "api": "http://fhapi9.com/api.php/provide/vod",
       "name": "番号资源",
