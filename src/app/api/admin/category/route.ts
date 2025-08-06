@@ -26,6 +26,14 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+  if (storageType === 'd1' || storageType === 'upstash') {
+    return NextResponse.json(
+      {
+        error: 'D1 和 Upstash 实例请通过配置文件调整',
+      },
+      { status: 400 }
+    );
+  }
 
   try {
     const body = (await request.json()) as BaseBody & Record<string, any>;
@@ -59,60 +67,90 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case 'add': {
-        const { key, name, api, detail } = body as {
-          key?: string;
+        const { name, type, query } = body as {
           name?: string;
-          api?: string;
-          detail?: string;
+          type?: 'movie' | 'tv';
+          query?: string;
         };
-        if (!key || !name || !api) {
+        if (!name || !type || !query) {
           return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
         }
-        if (adminConfig.SourceConfig.some((s) => s.key === key)) {
-          return NextResponse.json({ error: '该源已存在' }, { status: 400 });
+        // 检查是否已存在相同的查询和类型组合
+        if (
+          adminConfig.CustomCategories.some(
+            (c) => c.query === query && c.type === type
+          )
+        ) {
+          return NextResponse.json({ error: '该分类已存在' }, { status: 400 });
         }
-        adminConfig.SourceConfig.push({
-          key,
+        adminConfig.CustomCategories.push({
           name,
-          api,
-          detail,
+          type,
+          query,
           from: 'custom',
           disabled: false,
         });
         break;
       }
       case 'disable': {
-        const { key } = body as { key?: string };
-        if (!key)
-          return NextResponse.json({ error: '缺少 key 参数' }, { status: 400 });
-        const entry = adminConfig.SourceConfig.find((s) => s.key === key);
+        const { query, type } = body as {
+          query?: string;
+          type?: 'movie' | 'tv';
+        };
+        if (!query || !type)
+          return NextResponse.json(
+            { error: '缺少 query 或 type 参数' },
+            { status: 400 }
+          );
+        const entry = adminConfig.CustomCategories.find(
+          (c) => c.query === query && c.type === type
+        );
         if (!entry)
-          return NextResponse.json({ error: '源不存在' }, { status: 404 });
+          return NextResponse.json({ error: '分类不存在' }, { status: 404 });
         entry.disabled = true;
         break;
       }
       case 'enable': {
-        const { key } = body as { key?: string };
-        if (!key)
-          return NextResponse.json({ error: '缺少 key 参数' }, { status: 400 });
-        const entry = adminConfig.SourceConfig.find((s) => s.key === key);
+        const { query, type } = body as {
+          query?: string;
+          type?: 'movie' | 'tv';
+        };
+        if (!query || !type)
+          return NextResponse.json(
+            { error: '缺少 query 或 type 参数' },
+            { status: 400 }
+          );
+        const entry = adminConfig.CustomCategories.find(
+          (c) => c.query === query && c.type === type
+        );
         if (!entry)
-          return NextResponse.json({ error: '源不存在' }, { status: 404 });
+          return NextResponse.json({ error: '分类不存在' }, { status: 404 });
         entry.disabled = false;
         break;
       }
       case 'delete': {
-        const { key } = body as { key?: string };
-        if (!key)
-          return NextResponse.json({ error: '缺少 key 参数' }, { status: 400 });
-        const idx = adminConfig.SourceConfig.findIndex((s) => s.key === key);
+        const { query, type } = body as {
+          query?: string;
+          type?: 'movie' | 'tv';
+        };
+        if (!query || !type)
+          return NextResponse.json(
+            { error: '缺少 query 或 type 参数' },
+            { status: 400 }
+          );
+        const idx = adminConfig.CustomCategories.findIndex(
+          (c) => c.query === query && c.type === type
+        );
         if (idx === -1)
-          return NextResponse.json({ error: '源不存在' }, { status: 404 });
-        const entry = adminConfig.SourceConfig[idx];
+          return NextResponse.json({ error: '分类不存在' }, { status: 404 });
+        const entry = adminConfig.CustomCategories[idx];
         if (entry.from === 'config') {
-          return NextResponse.json({ error: '该源不可删除' }, { status: 400 });
+          return NextResponse.json(
+            { error: '该分类不可删除' },
+            { status: 400 }
+          );
         }
-        adminConfig.SourceConfig.splice(idx, 1);
+        adminConfig.CustomCategories.splice(idx, 1);
         break;
       }
       case 'sort': {
@@ -123,20 +161,22 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        const map = new Map(adminConfig.SourceConfig.map((s) => [s.key, s]));
-        const newList: typeof adminConfig.SourceConfig = [];
-        order.forEach((k) => {
-          const item = map.get(k);
+        const map = new Map(
+          adminConfig.CustomCategories.map((c) => [`${c.query}:${c.type}`, c])
+        );
+        const newList: typeof adminConfig.CustomCategories = [];
+        order.forEach((key) => {
+          const item = map.get(key);
           if (item) {
             newList.push(item);
-            map.delete(k);
+            map.delete(key);
           }
         });
         // 未在 order 中的保持原顺序
-        adminConfig.SourceConfig.forEach((item) => {
-          if (map.has(item.key)) newList.push(item);
+        adminConfig.CustomCategories.forEach((item) => {
+          if (map.has(`${item.query}:${item.type}`)) newList.push(item);
         });
-        adminConfig.SourceConfig = newList;
+        adminConfig.CustomCategories = newList;
         break;
       }
       default:
@@ -157,10 +197,10 @@ export async function POST(request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error('视频源管理操作失败:', error);
+    console.error('分类管理操作失败:', error);
     return NextResponse.json(
       {
-        error: '视频源管理操作失败',
+        error: '分类管理操作失败',
         details: (error as Error).message,
       },
       { status: 500 }

@@ -119,6 +119,14 @@ export async function fetchDoubanCategories(
       list: list,
     };
   } catch (error) {
+    // 触发全局错误提示
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('globalError', {
+          detail: { message: '获取豆瓣分类数据失败' },
+        })
+      );
+    }
     throw new Error(`获取豆瓣分类数据失败: ${(error as Error).message}`);
   }
 }
@@ -140,9 +148,112 @@ export async function getDoubanCategories(
     );
 
     if (!response.ok) {
+      // 触发全局错误提示
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('globalError', {
+            detail: { message: '获取豆瓣分类数据失败' },
+          })
+        );
+      }
       throw new Error('获取豆瓣分类数据失败');
     }
 
     return response.json();
+  }
+}
+
+interface DoubanListParams {
+  tag: string;
+  type: string;
+  pageLimit?: number;
+  pageStart?: number;
+}
+
+export async function getDoubanList(
+  params: DoubanListParams
+): Promise<DoubanResult> {
+  const { tag, type, pageLimit = 20, pageStart = 0 } = params;
+  if (shouldUseDoubanClient()) {
+    // 使用客户端代理获取（当设置了代理 URL 时）
+    return fetchDoubanList(params);
+  } else {
+    const response = await fetch(
+      `/api/douban?tag=${tag}&type=${type}&pageSize=${pageLimit}&pageStart=${pageStart}`
+    );
+
+    if (!response.ok) {
+      // 触发全局错误提示
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('globalError', {
+            detail: { message: '获取豆瓣列表数据失败' },
+          })
+        );
+      }
+      throw new Error('获取豆瓣列表数据失败');
+    }
+
+    return response.json();
+  }
+}
+
+export async function fetchDoubanList(
+  params: DoubanListParams
+): Promise<DoubanResult> {
+  const { tag, type, pageLimit = 20, pageStart = 0 } = params;
+
+  // 验证参数
+  if (!tag || !type) {
+    throw new Error('tag 和 type 参数不能为空');
+  }
+
+  if (!['tv', 'movie'].includes(type)) {
+    throw new Error('type 参数必须是 tv 或 movie');
+  }
+
+  if (pageLimit < 1 || pageLimit > 100) {
+    throw new Error('pageLimit 必须在 1-100 之间');
+  }
+
+  if (pageStart < 0) {
+    throw new Error('pageStart 不能小于 0');
+  }
+
+  const target = `https://movie.douban.com/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageLimit}&page_start=${pageStart}`;
+
+  try {
+    const response = await fetchWithTimeout(target);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const doubanData: DoubanCategoryApiResponse = await response.json();
+
+    // 转换数据格式
+    const list: DoubanItem[] = doubanData.items.map((item) => ({
+      id: item.id,
+      title: item.title,
+      poster: item.pic?.normal || item.pic?.large || '',
+      rate: item.rating?.value ? item.rating.value.toFixed(1) : '',
+      year: item.card_subtitle?.match(/(\d{4})/)?.[1] || '',
+    }));
+
+    return {
+      code: 200,
+      message: '获取成功',
+      list: list,
+    };
+  } catch (error) {
+    // 触发全局错误提示
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('globalError', {
+          detail: { message: '获取豆瓣列表数据失败' },
+        })
+      );
+    }
+    throw new Error(`获取豆瓣分类数据失败: ${(error as Error).message}`);
   }
 }
